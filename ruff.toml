@@ -1,0 +1,115 @@
+# Target Python version
+target-version = "py312"
+line-length = 100
+
+# Include paths to lint
+# include = ["lib", "apps", "tests"]
+
+# Exclude paths
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "htmlcov",
+    "*.egg-info",
+]
+
+[lint]
+# Enable rule sets
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate (commented-out code)
+    "PD",  # pandas-vet
+    "PL",  # Pylint
+    "RUF", # Ruff-specific rules
+    
+    # Additional rules for Pre-review checklist
+    "C90",   # mccabe (cyclomatic complexity)
+    "N",     # pep8-naming (naming conventions)
+    "D",     # pydocstyle (documentation)
+    "ANN",   # flake8-annotations (type annotations)
+    "S",     # flake8-bandit (security/resource management)
+    "A",     # flake8-builtins (shadowing built-ins)
+    "COM",   # flake8-commas
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "EM",    # flake8-errmsg
+    "ISC",   # flake8-implicit-str-concat
+    "ICN",   # flake8-import-conventions
+    "PIE",   # flake8-pie (misc lints, DRY patterns)
+    "PT",    # flake8-pytest-style
+    "RSE",   # flake8-raise
+    "RET",   # flake8-return
+    "SLOT",  # flake8-slots
+    "TID",   # flake8-tidy-imports
+    "PERF",  # Perflint (performance anti-patterns)
+    "FURB",  # refurb (modernize code, refactoring)
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "EM101",
+    "EM102",
+    "PD901",  # df is a bad variable name (common in data processing)
+
+    "D101",
+    "D102",
+    "D200",
+    "D212",
+    "D203",    # one-blank-line-before-class (conflicts with D211)
+    "D213",    # multi-line-summary-second-line (conflicts with D212)
+    "D400",
+    "D401",
+    "D413",
+    "COM812",
+    
+    "ANN101",  # Missing type annotation for self
+    "ANN102",  # Missing type annotation for cls
+    "ANN401",  # Dynamically typed expressions (Any) are disallowed
+    
+    "S101",    # Use of assert (OK in tests, configure per-file below)
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+# Configure complexity thresholds
+[lint.mccabe]
+max-complexity = 5
+
+# Per-file ignores
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ARG",  # Allow unused arguments in tests
+    "S101", # Allow assert statements
+    "PLR2004", # Allow magic values in tests
+]
+"apps/cli/**/*.py" = [
+    "PLR0913", # Too many arguments (can indicate SRP violations)
+    "PLR0915", # Too many statements (function >50 lines)
+]
+"**/__init__.py" = [
+    "D104",     # Don't require docstrings in __init__.py
+    "F401",     # Allow unused imports (re-exports)
+]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+

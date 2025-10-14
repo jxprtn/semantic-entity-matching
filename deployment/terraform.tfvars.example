@@ -1,0 +1,24 @@
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Lambda Configuration
+function_name = "opensearch-ingest-lambda-eroxsu"
+
+# S3 Bucket Configuration
+bucket_name          = "lambda-ingest-bucket-azesou"  # Must be globally unique
+enable_versioning    = true
+force_destroy_bucket = false  # Set to true for development environments
+
+# OpenSearch Configuration
+opensearch_domain_name    = "codification-xusnma"  # Must be unique within region
+opensearch_instance_count = 1
+opensearch_instance_type  = "m8g.medium.search"
+opensearch_version        = "OpenSearch_3.1"
+
+# Tags
+tags = {
+  Environment = "dev"
+  Project     = "opensearch-ingest"
+  ManagedBy   = "terraform"
+  Owner       = "your-team"
+}

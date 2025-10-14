@@ -1,0 +1,224 @@
+---
+description: Project file structure and code organization patterns
+alwaysApply: false
+---
+# Code Organization
+
+## File Structure
+
+```
+apps/           # Application entry points (CLI, Lambda, web)
+lib/            # Reusable library code (bedrock, opensearch, data processing)
+deployment/     # Terraform infrastructure as code
+tests/          # Test suites (mirrors lib/ and apps/ structure)
+docs/           # MkDocs documentation
+examples/       # Jupyter notebooks and usage examples
+data/           # Data files (git-ignored except structure)
+```
+
+**Key directories:**
+- `apps/cli/commands/` - CLI commands (setup, ingest, search, evaluate, vectorize, dev, tokens)
+- `apps/lambda/ingest/` - Lambda function handler for S3-triggered ingestion
+- `apps/web/` - Streamlit web frontend with utility helpers
+- `lib/bedrock/` - Bedrock client with adapters (Cohere, Titan) and commands
+- `lib/opensearch/` - OpenSearch client with entities, repositories, and services
+- `lib/file_token_estimation/` - Token counting utilities
+- `deployment/modules/` - Terraform modules (lambda-ingest, opensearch)
+- `tests/` - Integration and unit tests mirroring lib/ and apps/ structure
+- `docs/` - Project documentation (getting started, CLI reference, deployment guides)
+- `examples/` - End-to-end usage examples and notebooks
+
+## Module Organization
+
+### apps/ Directory
+
+Contains application entry points organized by application type:
+
+**apps/cli/** - Command-line interface:
+- `main.py` - CLI entry point with command routing
+- `commands/` - Command implementations (setup, ingest, search, evaluate, vectorize, dev, tokens)
+- `utils.py` - CLI-specific utilities
+
+**apps/lambda/ingest/** - AWS Lambda functions:
+- `main.py` - Lambda handler for S3-triggered ingestion
+- `requirements.txt` - Lambda-specific dependencies
+
+**apps/web/** - Streamlit web interface:
+- `main.py` - Streamlit application
+- `utils/` - Web app utilities:
+  - `get_opensearch_client.py` - Client factory for OpenSearch
+  - `get_query_embedding.py` - Embedding generation helper
+  - `load_project_root.py` - Project root path resolution
+
+**Key principle**: Application code is a **thin orchestration layer** that:
+- Handles user input/output (CLI args, prompts, file paths)
+- Creates and configures clients
+- Calls library functions for business logic
+- Handles user-facing errors and output
+
+### lib/ Directory
+
+Contains reusable library code organized into modules and packages:
+
+**Top-level modules**:
+- `bedrock/` - AWS Bedrock client with model adapters and commands
+- `opensearch/` - OpenSearch client with entities, repositories, and services
+- `file_token_estimation/` - Token counting for CSV/Excel files
+- `async_batch_processor.py` - Async batch processing with dynamic concurrency
+- `batch_processor.py` - Synchronous batch processing utilities
+- `counter.py` - Progress tracking and statistics
+- `data_reader.py` - CSV/Excel file reading utilities
+- `dynamic_semaphore.py` - Dynamic concurrency limiting
+- `evaluate.py` - Search evaluation metrics
+- `ingest.py` - Data ingestion to OpenSearch
+- `logging.py` - Logging configuration
+- `opensearch_setup.py` - OpenSearch connector and model setup
+- `rerank.py` - Search result reranking
+- `search_and_rerank.py` - Combined search and rerank operations
+- `utils.py` - General utility functions
+- `vectorize_columns.py` - DataFrame column vectorization
+
+**lib/bedrock/ structure**:
+- `client.py` - Main Bedrock async client
+- `adapters/` - Model-specific adapters (Cohere, Titan)
+- `commands/` - Command pattern for API operations (converse, embeddings, invoke)
+- `types.py` - Type definitions
+
+**lib/opensearch/ structure**:
+- `client.py` - Main OpenSearch client
+- `entities/` - Domain entities (connector, index, model, model_group, pipeline)
+- `repositories/` - Data access layer for entities
+- `services/` - Business logic (search_service)
+
+**lib/file_token_estimation/ structure**:
+- `file_token_estimator.py` - Main estimator
+- `formats.py` - File format handlers
+- `methods.py` - Estimation methods
+- `result.py` - Result data structures
+
+**Key principle**: Library code is **framework-agnostic and reusable**:
+- Works with **data structures** (DataFrames, lists, dicts), not files
+- Accepts **clients as parameters** (dependency injection pattern)
+- Can be used by **multiple applications** (CLI, Lambda, web app)
+- Returns **processed data**, not side effects (file I/O, user prompts)
+
+### Separation of Concerns
+
+**apps/** handles:
+- ✅ User input validation (file paths, CLI arguments)
+- ✅ Client creation and configuration
+- ✅ File I/O (reading input files, writing output files)
+- ✅ User-facing output (print statements, progress messages)
+- ✅ User prompts (confirmations, overwrite prompts)
+- ✅ User-facing error handling (sys.exit with messages)
+
+**lib/** handles:
+- ✅ Business logic (vectorization, ingestion, search)
+- ✅ Data processing (DataFrame operations, async processing)
+- ✅ API interactions (Bedrock, OpenSearch)
+- ✅ Technical error handling (exceptions, retries, logging)
+- ✅ Algorithm implementation (embeddings, reranking)
+
+### Example: Vectorization
+
+**CLI command** (`apps/cli/commands/vectorize.py`):
+- Validates file exists
+- Prompts for overwrite
+- Creates `BedrockClient` and `DataReader`
+- Calls `vectorize_columns()` from `lib/`
+- Writes output CSV
+- Reports results to user
+
+**Library function** (`lib/vectorize_columns.py`):
+- Accepts DataFrame and client as parameters
+- Processes data asynchronously
+- Returns DataFrame with embeddings added
+- Handles technical errors (throttling, retries)
+- No file I/O or user prompts
+
+### deployment/ and tests/ Directories
+
+**deployment/** - Infrastructure as Code:
+- `main.tf` - Root Terraform configuration
+- `modules/lambda-ingest/` - Lambda ingestion infrastructure
+- `modules/opensearch/` - OpenSearch domain infrastructure
+- `terraform.tfstate` - Current infrastructure state (git-ignored)
+- `terraform.tfvars.example` - Configuration template
+
+**tests/** - Test suites mirroring source structure:
+- `tests/lib/` - Library tests organized by module:
+  - `opensearch/integration/` - OpenSearch integration tests
+  - `opensearch/unit/` - OpenSearch unit tests
+  - `bedrock/integration/` - Bedrock integration tests
+  - `bedrock/unit/` - Bedrock unit tests
+  - `vectorize_columns/integration/` - Vectorization integration tests
+  - `async_batch_processor/unit/` - Batch processor tests
+  - `data_reader/unit/` - Data reader tests
+- `tests/apps/cli/commands/unit/` - CLI command tests
+- `conftest.py` - Shared pytest fixtures
+- `aws.env` - AWS integration test configuration
+- `localhost.env` - Local OpenSearch test configuration
+
+**docs/** - MkDocs documentation:
+- `index.md` - Documentation home page
+- `getting-started.md` - Quick start guide
+- `cli-reference.md` - CLI command documentation
+- `deploy-aws.md` - AWS deployment guide
+- `web-ui.md` - Web interface documentation
+- `lambda-handler.md` - Lambda function documentation
+- `development/` - Development guides (environment setup, testing, deployment)
+
+**examples/** - Usage examples:
+- `end-to-end-example.ipynb` - Jupyter notebook demonstrating full workflow
+
+**data/** - Data storage (git-ignored):
+- `source/` - Source data files for ingestion
+
+## Language-Specific Standards
+
+For Python-specific coding standards, see `python-standards.mdc` (imports, naming conventions, async patterns, dependency injection).
+
+## Configuration Files
+
+| File | Purpose | Committed? |
+|------|---------|-----------|
+| `.env` | Local development configuration | No (git-ignored) |
+| `pyproject.toml` | Python package metadata and dependencies | Yes |
+| `uv.lock` | Locked dependency versions | Yes |
+| `ruff.toml` | Linter/formatter configuration | Yes |
+| `pyrightconfig.json` | Type checker configuration | Yes |
+| `mkdocs.yml` | Documentation site configuration | Yes |
+| `docker-compose.yaml` | Local OpenSearch container setup | Yes |
+| `terraform` | Terraform wrapper script | Yes |
+| `terraform.Dockerfile` | Terraform container definition | Yes |
+| `deployment/terraform.tfvars` | Infrastructure values | No (git-ignored) |
+| `deployment/terraform.tfvars.example` | Infrastructure template | Yes |
+| `tests/aws.env` | AWS integration test config | Yes |
+| `tests/localhost.env` | Local OpenSearch test config | Yes |
+
+## Design Patterns
+
+### Dependency Injection
+
+Library functions accept dependencies as parameters (not created internally). This enables testability, reusability, and flexibility across different contexts (CLI, Lambda, web, tests).
+
+See `python-standards.mdc` for implementation details.
+
+## Anti-Patterns to Avoid
+
+### Organizational Anti-Patterns
+
+- ❌ **Deeply nested directories**: Keep directory structure flat and logical
+- ❌ **Mixed concerns**: Don't mix application code with library code
+- ❌ **Business logic in apps**: Keep business logic in library functions
+- ❌ **File I/O in libraries**: Handle file operations in the application layer
+- ❌ **Client creation in libraries**: Inject clients as parameters instead
+- ❌ **Circular dependencies**: Avoid modules that depend on each other
+- ❌ **Ambiguous naming**: Use clear, descriptive names for modules and directories
+
+### Architectural Violations
+
+- ❌ **Library calling apps**: Libraries should never import from apps/
+- ❌ **Apps duplicating logic**: Shared logic belongs in lib/, not duplicated across apps
+- ❌ **Mixed test types**: Keep integration and unit tests separated
+- ❌ **Configuration in code**: Use environment variables and config files

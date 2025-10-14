@@ -1,0 +1,26 @@
+*.pyc
+.DS_STORE
+.vscode
+.kiro
+.coverage
+.venv
+.ruff_cache
+.pytest_cache
+.cursorrules
+.code-quality-reviews
+*.env
+!example.env
+!example.localhost.env
+tests/*.env
+data/*
+deployment/terraform.tfvars
+deployment/.terraform*
+deployment/builds
+deployment/terraform.tfstate
+deployment/terraform.tfstate.backup
+mapper_parsing_errors_*.json
+secrets.toml
+htmlcov
+
+# MkDocs
+site/

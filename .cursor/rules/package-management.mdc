@@ -1,0 +1,72 @@
+---
+globs: *.py
+alwaysApply: false
+---
+# Package Management
+
+## Using uv
+
+**This project uses `uv` instead of pip:**
+
+```bash
+# Install dependencies
+uv sync
+uv sync --extra test
+
+# Run commands
+uv run python -m apps.cli.main setup --index my-index
+uv run pytest
+
+# Add dependencies
+uv add package-name
+uv add --optional test pytest-timeout
+```
+
+## Project-Specific Commands
+
+### Run CLI
+
+```bash
+uv run python -m apps.cli.main <command> [args]
+```
+
+### Run Tests
+
+```bash
+uv run pytest -m unit
+uv run pytest -m integration
+```
+
+### Run Web App
+
+```bash
+uv run streamlit run apps/web/main.py
+```
+
+## pytest Configuration
+
+Project-specific markers in `pyproject.toml`:
+
+```toml
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "localhost: Localhost only tests",
+    "aws: AWS only tests",
+    "slow: Slow running tests",
+]
+```
+
+## Lambda Deployment
+
+Lambda uses separate `requirements.txt`:
+
+```bash
+# Generate Lambda requirements
+uv pip freeze | grep -E "boto3|opensearch-py|pandas" > apps/lambda/ingest/requirements.txt
+```
+
+## Things to Avoid
+
+- ❌ Don't use `pip` (use `uv` instead)
+- ❌ Don't commit `.venv/` or `uv.lock` should be committed

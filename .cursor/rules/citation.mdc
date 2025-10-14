@@ -1,0 +1,144 @@
+---
+alwaysApply: true
+---
+
+# Citation and Source Verification Rules
+
+## Core Principles
+
+### 1. Source Hierarchy Principle
+**ALWAYS prioritize authoritative sources in this order:**
+
+1. **Context7 MCP Server** - Use first for frameworks, libraries, and technical documentation
+2. **Web Search** - Use when Context7 doesn't return information or needs validation
+3. **Official Documentation** - Prefer official docs over third-party tutorials
+4. **Never assume** - Always verify information, especially for:
+   - API versions and endpoints
+   - Framework features and capabilities
+   - Library methods and parameters
+   - Best practices and patterns
+   - Breaking changes or deprecations
+
+### 2. Mandatory Citation Principle
+**ALWAYS cite sources when providing information about:**
+
+- Framework or library features (new or existing)
+- API documentation and usage patterns
+- Best practices or recommendations
+- Version-specific information
+- Breaking changes or deprecations
+- Configuration examples from external sources
+- Code patterns or solutions from documentation
+
+### 3. Citation Format Principle
+**Citations must include:**
+
+- **Clickable link** - Use markdown format: `[Link Text](URL)`
+- **Short excerpt** - 1-2 sentences from the source that support the claim
+- **Context** - Explain how the source relates to the current task
+- **Date/Version** - Include if relevant (e.g., "as of version 2.0" or "according to 2024 docs")
+
+### 4. Verification Workflow
+**For any external information, follow this workflow:**
+
+```
+1. Check Context7 MCP server first
+2. If no results, search the web
+3. Verify information from authoritative source
+4. Cite the source with link and excerpt
+5. Apply the information to the task
+```
+
+## When to Cite
+
+### Always Cite:
+- ✅ Framework/library features and APIs
+- ✅ Configuration examples from official docs
+- ✅ Best practices from authoritative sources
+- ✅ Version-specific information
+- ✅ Breaking changes or migration guides
+- ✅ Code patterns from documentation
+- ✅ API endpoints and parameters
+
+### Optional Citation:
+- ⚠️ Well-known, stable patterns (e.g., standard Python syntax)
+- ⚠️ Common programming concepts
+- ⚠️ Information already in the codebase
+
+### Never Cite:
+- ❌ Information you've verified through code inspection
+- ❌ Your own analysis or conclusions
+- ❌ Standard language features (unless version-specific)
+
+## Citation Format Examples
+
+### Good Citation Format
+```
+According to the [OpenSearch Python Client documentation](https://opensearch.org/docs/latest/clients/python/),
+the client supports async operations through the `AsyncOpenSearch` class. This allows
+for non-blocking operations when working with large datasets.
+```
+
+### Good Citation with Version
+```
+As documented in [AWS Bedrock boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock.html),
+the `invoke_model` method accepts a `modelId` parameter. In version 1.34.0+, 
+this supports the new Titan embedding models.
+```
+
+### Good Citation with Context
+```
+The [Terraform AWS Provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+recommends using `aws_iam_role` with `assume_role_policy` for Lambda functions.
+This ensures proper permission scoping for our ingestion Lambda.
+```
+
+### Bad Citation (Missing Link)
+```
+❌ OpenSearch supports vector search through the k-NN plugin.
+```
+
+### Bad Citation (Missing Context)
+```
+❌ https://opensearch.org/docs - Use this for vector search
+```
+
+### Bad Citation (No Excerpt)
+```
+❌ See OpenSearch docs for more info.
+```
+
+## Implementation Checklist
+
+When providing information from external sources, verify:
+- [ ] Have I checked Context7 MCP server first?
+- [ ] Have I searched the web if Context7 had no results?
+- [ ] Have I verified the information is current and accurate?
+- [ ] Have I included a clickable link in the citation?
+- [ ] Have I included a relevant excerpt from the source?
+- [ ] Have I explained how the source relates to the task?
+- [ ] Have I included version/date information if relevant?
+
+## Transparency Principle
+
+**When uncertain or relying on search results, be transparent:**
+
+- State what you're checking: "Let me verify the latest OpenSearch Python client API..."
+- Acknowledge limitations: "Based on web search results, this feature appears to be..."
+- Indicate when verification is pending: "I'll need to verify this with the official documentation..."
+- Share verification steps when relevant: "Checked via Context7 → no results → web search → official docs"
+
+## Meta-Principle
+
+**"Cite before you claim"** - Never state information about frameworks, libraries, or APIs without:
+1. Verifying it from an authoritative source
+2. Citing that source with a clickable link
+3. Including a relevant excerpt that supports the claim
+4. Providing context for how it applies to the current task
+
+This applies whether you're:
+- Recommending a library or framework
+- Explaining an API or feature
+- Providing configuration examples
+- Suggesting best practices
+- Documenting breaking changes

@@ -1,0 +1,13 @@
+{
+    "include": [
+        "lib",
+        "apps"
+    ],
+    "exclude": [
+        ".venv",
+        "tests",
+        "**/test_*.py",
+        "**/*_test.py"
+    ],
+    "typeCheckingMode": "strict"
+}
