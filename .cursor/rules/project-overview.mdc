@@ -1,0 +1,58 @@
+---
+description: High-level overview of the entity matching with embeddings project
+alwaysApply: true
+---
+
+# Project Overview
+
+## Purpose
+
+This project provides an automated solution for entity mapping and ontology alignment. It leverages OpenSearch as a vector store and search engine, combined with Cohere embedding models accessed through Amazon Bedrock, to enable semantic matching and discovery of related entities across datasets.
+
+## Key Components
+
+### CLI Tool
+OpenSearch operations via command-line interface:
+- `setup` - Configure OpenSearch ML connectors and document index
+- `ingest` - Ingest data from CSV/Excel files into OpenSearch
+- `search` - Search data using vector embeddings
+- `evaluate` - Evaluate search performance against test datasets
+- `dev` - Interactive OpenSearch request console
+- `tokens` - Estimate token counts for files
+- `vectorize` - Generate embeddings for CSV/Excel files
+
+### AWS Infrastructure
+- Terraform deployment for complete AWS stack
+- OpenSearch domain with vector search capabilities
+- Lambda functions for automated S3-to-OpenSearch ingestion
+- S3 bucket for data storage
+- IAM roles for cross-service communication
+
+### Web Frontend
+- Streamlit-based web interface
+- Interactive search and visualization
+
+### Core Libraries
+- **OpenSearch Client**: Full-featured client for OpenSearch operations
+- **Bedrock Integration**: Async client for AWS Bedrock embeddings and chat
+- **Data Processing**: CSV/Excel file reading and batch processing
+- **Vectorization**: Embedding generation for text data
+- **Token Estimation**: File token counting utilities
+
+## Technology Stack
+
+- **Language**: Python 3.12+
+- **Package Manager**: uv
+- **Cloud Provider**: AWS
+- **Vector Database**: OpenSearch
+- **Embeddings**: AWS Bedrock (Titan, Cohere models)
+- **Infrastructure as Code**: Terraform
+- **Testing**: pytest with integration and unit test suites
+- **Web Framework**: Streamlit
+
+## Development Workflow
+
+1. **Dependency Management**: Use `uv` for all package operations
+2. **Testing**: Run tests with `uv run pytest`
+3. **CLI Usage**: Run commands with `uv run python -m apps.cli.main`
+4. **Infrastructure**: Deploy with `./terraform` wrapper script

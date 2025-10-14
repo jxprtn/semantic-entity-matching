@@ -1,0 +1,1 @@
+Run the following command 'uv run ruff check [file pattern (default: **/*.py)] --select [rules code]' and fix the issues.

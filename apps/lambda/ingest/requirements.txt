@@ -1,0 +1,2 @@
+# boto3 and pandas are provided by AWS Lambda runtime and layers
+opensearch-py>=3.0.0

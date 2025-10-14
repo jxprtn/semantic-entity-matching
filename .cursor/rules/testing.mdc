@@ -1,0 +1,109 @@
+---
+description: Guidelines for writing tests
+alwaysApply: false
+---
+# Testing Guidelines
+
+## Pytest Markers
+
+All pytest markers must be defined in `pyproject.toml` before use. Available markers:
+
+- `@pytest.mark.unit` - Unit tests (isolated, fast, no external dependencies)
+- `@pytest.mark.integration` - Integration tests (require external services)
+- `@pytest.mark.localhost` - Tests that only run against localhost environment
+- `@pytest.mark.aws` - Tests that only run against AWS environment
+- `@pytest.mark.slow` - Tests that take a long time to run
+
+**Usage Rules:**
+1. Integration tests MUST be marked with `@pytest.mark.integration`
+2. Apply environment-specific markers (`@pytest.mark.localhost` or `@pytest.mark.aws`)
+3. Tests can have multiple markers
+4. Apply markers at class level when all tests share requirements
+
+```python
+@pytest.mark.integration
+@pytest.mark.localhost
+class TestOpenSearchClientMLIntegration:
+    """Integration tests for OpenSearchClient ML operations on localhost."""
+    # ... tests ...
+```
+
+## Test Organization Principles
+
+**Structure tests using the Arrange-Act-Assert pattern**
+
+### DRY (Don't Repeat Yourself)
+
+**Avoid duplication by:**
+1. Using fixtures for common setup/teardown
+2. Creating reusable fixtures for common patterns
+3. Using `@pytest.mark.parametrize` for similar test cases
+
+## Fixture Best Practices
+
+**Create reusable fixtures for repeated setup:**
+- **Simple resources**: Single resource fixtures (`connector`, `model_group`)
+- **Composite resources**: Multi-resource fixtures (`model_group_with_connector`)
+- **Cleanup**: Use `yield` for automatic teardown
+
+### Pattern 1: Fixture-Managed Resources (Preferred)
+
+**Fixtures that create resources should clean them up:**
+
+```python
+@pytest.fixture
+def connector(self, opensearch, connector_auth):
+    connector_id = self._create_connector_with_auth(...)
+    yield connector_id
+    opensearch.delete_connector(connector_id=connector_id)
+```
+
+### Pattern 2: Auto-Cleanup for Test-Created Resources
+
+**Only use auto-cleanup fixtures when tests create resources outside of fixtures:**
+
+```python
+@pytest.fixture
+def cleanup_connectors(self, opensearch):
+    """Auto-cleanup for resources created directly in tests."""
+    connector_ids = []
+    yield connector_ids
+    # Cleanup resources that tests added to the list
+    for cid in connector_ids:
+        opensearch.delete_connector(connector_id=cid)
+
+def test_multiple_connectors(self, opensearch, cleanup_connectors):
+    """Example: Test creates resources directly."""
+    for i in range(3):
+        cid = opensearch.create_connector(...)
+        cleanup_connectors.append(cid)  # Register for cleanup
+    # ... test logic ...
+```
+
+**Key Principle**: If a fixture creates a resource, the fixture should clean it up. Use auto-cleanup fixtures only for resources created directly in test bodies.
+
+## Test Folder Structure
+
+```
+tests/
+├── lib/
+│   └── <library_name>/
+│       ├── integration/
+│       └── unit/
+└── apps/
+    └── <app_name>/
+        ├── integration/
+        └── unit/
+```
+
+**Rules:**
+- Integration tests → `integration/` folder
+- Unit tests → `unit/` folder
+- Organize by library/app they cover
+
+## New Test Checklist
+
+- [ ] Placed in correct folder (`integration/` or `unit/`)
+- [ ] Markers applied
+- [ ] Tests independent (any order)
+- [ ] Cleanup via fixtures

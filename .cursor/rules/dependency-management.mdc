@@ -1,0 +1,38 @@
+---
+description: Guidance for installing new libraries or tools with package managers
+alwaysApply: false
+---
+# Dependency Management
+
+## Core Principle
+
+**Always verify the latest available version before using any versioned dependency.**
+
+Check official registries/APIs before specifying versions:
+- Docker images: Docker Hub API or `docker pull`
+- Python packages: PyPI (`pip index versions package`)
+- API versions: Official documentation
+
+Apply to:
+- Docker images (`opensearchproject/opensearch:VERSION`)
+- Python packages (`uv add package==VERSION`)
+- API versions in code
+
+## Project-Specific Dependencies
+
+### Key Python Libraries
+Use `uv` for all package management (see `package-management.mdc`):
+```bash
+uv add package-name
+uv sync
+```
+
+### Lambda Dependencies
+Lambda uses separate `requirements.txt` in `apps/lambda/ingest/requirements.txt`
+
+## Verification Workflow
+
+1. Identify dependency type (Docker, Python, API)
+2. Check official registry for latest version
+3. Verify version exists and is compatible
+4. Use verified version with citation if relevant

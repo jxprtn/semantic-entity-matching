@@ -1,0 +1,162 @@
+---
+globs: apps/cli/**/*.py
+alwaysApply: false
+---
+# CLI Commands
+
+## Command Location
+
+**All CLI commands are in `apps/cli/commands/` directory.**
+
+Entry point: `apps/cli/main.py`
+
+## Command Structure
+
+Each command module **must define**:
+
+1. **DEFINITION dictionary** with command metadata
+2. **main() function** that accepts keyword-only arguments
+
+## CLI Command Pattern
+
+**CLI commands are thin wrappers around library functions.**
+
+Commands should:
+- **Orchestrate** (validate inputs, create clients, handle file I/O)
+- **Call library functions** (delegate business logic to `lib/`)
+- **Handle user-facing concerns** (output, prompts, error messages)
+
+Commands should NOT:
+- ❌ Contain business logic (that belongs in `lib/`)
+- ❌ Process data directly (use library functions)
+- ❌ Duplicate logic that could be reused
+
+### Typical Command Flow
+
+```python
+def main(*, file: str, ...) -> None:
+    # 1. Validate inputs (file paths, user input)
+    if not os.path.exists(file):
+        print(f"Error: File not found: {file}")
+        sys.exit(1)
+    
+    # 2. Create clients/credentials
+    client = BedrockClient(profile=profile, region=region)
+    df = DataReader(file_path=file).df
+    
+    # 3. Call library function (business logic)
+    result_df = vectorize_columns(
+        bedrock_model_id=bedrock_model_id,
+        client=client,
+        columns=columns,
+        df=df,
+        ...
+    )
+    
+    # 4. Handle output (write files, report results)
+    result_df.to_csv(output_path, index=False)
+    print(f"Successfully wrote {len(result_df)} rows")
+```
+
+### Library Function Pattern
+
+Library functions in `lib/` should:
+- Work with **data structures** (DataFrames, lists, dicts), not files
+- Accept **clients as parameters** (dependency injection)
+- Be **framework-agnostic** (reusable by CLI, Lambda, web app)
+- Return **processed data**, not write files
+
+See `lib/vectorize_columns.py` and `apps/cli/commands/vectorize.py` for a complete example.
+
+### DEFINITION Dictionary
+
+```python
+DEFINITION = {
+    "name": "mycommand",
+    "description": "Brief description",
+    "arguments": [
+        {"name": "my-arg", "type": str, "required": True, "help": "Description"},
+        {"name": "optional-arg", "type": int, "default": 50, "help": "Optional"},
+        {"name": "flag", "action": "store_true", "help": "Boolean flag"},
+        {"name": "list-arg", "type": str, "nargs": "+", "help": "List values"},
+    ],
+}
+```
+
+### main() Function
+
+```python
+def main(*, my_arg: str, optional_arg: int = 50, flag: bool = False) -> None:
+    """Main entry point. CLI uses kebab-case, Python uses snake_case."""
+    # Implementation
+```
+
+## Argument Naming
+
+- **CLI uses kebab-case**: `--my-arg`, `--optional-arg`
+- **Python uses snake_case**: `my_arg`, `optional_arg`
+- Conversion happens automatically in `apps/cli/main.py`
+
+## Common Arguments
+
+Defined in `apps/cli/main.py` as `COMMON_ARGUMENTS`:
+
+- `--log-level`: Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `--no-timestamp`: Disable timestamps in log output
+
+These are automatically added to all commands.
+
+## Creating a New Command
+
+1. Create `apps/cli/commands/mycommand.py` with DEFINITION and main()
+2. Import in `apps/cli/main.py`: `from .commands import mycommand`
+3. Add to COMMANDS list in `apps/cli/main.py`
+4. Run: `uv run python -m apps.cli.main mycommand --args`
+
+## Output Guidelines
+
+- **User-facing**: Use `print()` for status and results
+- **Debug**: Use logger from `lib.logging.get_logger(__name__)`
+- **Progress**: Print progress for long operations
+
+```python
+print(f"Processing file: {file}")  # User output
+logger.debug(f"Batch {i}/{n}")     # Debug output
+```
+
+## Error Handling
+
+**KeyboardInterrupt handled at CLI level** - commands don't need to handle Ctrl+C.
+
+**Exit on critical errors:**
+```python
+if not os.path.exists(file_path):
+    print(f"Error: File not found: {file_path}")
+    sys.exit(1)
+```
+
+**User confirmation for destructive operations:**
+```python
+confirmation = input(f"Delete index? (yes/no): ")
+if confirmation.lower() != "yes":
+    sys.exit(0)
+```
+
+## Available Commands
+
+| Command | Purpose |
+|---------|---------|
+| setup | Configure OpenSearch ML connectors and index |
+| ingest | Load CSV/Excel data into OpenSearch |
+| search | Vector search using embeddings |
+| evaluate | Test search performance |
+| dev | Interactive OpenSearch console |
+| tokens | Estimate file token counts |
+| vectorize | Generate embeddings for files |
+
+## Command Examples
+
+See existing commands for patterns:
+- **Simple command**: `apps/cli/commands/search.py`
+- **Complex setup**: `apps/cli/commands/setup.py`
+- **With file I/O**: `apps/cli/commands/ingest.py`

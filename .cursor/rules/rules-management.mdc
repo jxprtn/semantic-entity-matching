@@ -1,0 +1,126 @@
+---
+globs: *.mdc
+alwaysApply: false
+---
+# Rule Management
+
+## Where to Store Rules
+
+**ALL project-specific rules should be stored in `.cursor/rules/` directory, NOT in `.cursorrules` file.**
+
+The `.cursorrules` file should only contain a brief redirect message pointing to the `.cursor/rules/` folder.
+
+## Creating New Rules
+
+When creating new rules:
+
+1. **File Location**: Create `.mdc` files in `.cursor/rules/` directory
+2. **File Naming**: Use descriptive kebab-case names (e.g., `python-standards.mdc`, `cli-commands.mdc`)
+3. **YAML Front Matter**: Include at the top of each file with either `description` OR `globs` (REQUIRED):
+   ```yaml
+   ---
+   description: Brief description of what this rule covers
+   alwaysApply: false
+   ---
+   ```
+   OR
+   ```yaml
+   ---
+   globs: *.py  # Apply when working with Python files
+   alwaysApply: false
+   ---
+   ```
+   **Required fields:**
+   - **description** OR **globs** (must provide one): Controls when rule is included
+     - `description`: Human-readable explanation of when to apply this rule (for topic-based rules)
+     - `globs`: File pattern(s) that trigger this rule (e.g., `*.py`, `*.tf`, `*.mdc`) (for file-type-specific rules)
+   - **alwaysApply**: Must always be `false` - rules are included only when relevant
+4. **Content Organization**: Use clear markdown structure with headers and sections
+5. **Specificity**: Keep rules focused on specific topics for easier maintenance
+
+## Keep Rules Project-Specific
+
+**Remove common knowledge. Only include project-specific patterns:**
+
+### What to Include ✅
+- Project-specific helpers and utilities (e.g., `get_aws_credentials()`, `Bedrock` class)
+- Project preferences that differ from defaults (e.g., `uv` instead of `pip`, `aioboto3` instead of `boto3`)
+- Unique conventions and patterns (e.g., keyword-only args for all functions, alphabetical sorting)
+- Custom project structure and file locations
+- Project-specific configurations and settings
+
+### What to Remove ❌
+- Standard language syntax and features (everyone knows f-strings, type hints, etc.)
+- Common library documentation (refer to official docs instead)
+- Generic best practices (e.g., "use meaningful variable names", "handle errors gracefully")
+- Standard package manager commands (basic `uv` commands are documented elsewhere)
+- Common security patterns (e.g., "don't hardcode credentials" is universal)
+- Boilerplate code examples that aren't project-specific
+
+### Example: Good vs Bad
+
+**❌ BAD** - Common knowledge: "Prefer f-strings over `.format()`" (everyone knows this)
+
+**✅ GOOD** - Project-specific: "Always use absolute imports with `lib.` prefix" (unique to this project)
+
+### Rule Size Guidelines
+
+- **Aim for concise rules**: token count should be under 800
+- **Check token count**: Use `uv run python -m apps.cli.main tokens --file .cursor/rules/your-rule.mdc` to verify
+- **Split large rules**: If a rule exceeds 800 tokens, consider splitting it into smaller, focused rules
+- **Focus on "what's different"**: Document what makes this project unique, not universal programming practices
+
+### Optimization Strategies
+
+**Always apply these when creating rules:**
+
+1. **Cross-reference instead of duplicating** - If another rule covers it, just reference it
+2. **Link to code instead of templates** - Point to actual implementations: `See apps/cli/commands/setup.py`
+3. **Avoid CRUD progressions** - Don't show create/read/update/delete if one example suffices
+4. **Use tables for lists** - Condense repetitive information into tables
+
+## Avoid Referencing Previous Versions
+
+**Rules should document current state, not historical changes:**
+
+- ❌ Don't reference prior behavior or old patterns
+- ❌ Don't include "avoid old X" statements
+- ✅ Document what **is**, not what **was**
+- ✅ Focus on current patterns and structure
+
+## Rule File Structure
+
+Each rule file should follow this structure:
+
+```markdown
+---
+description: Brief description OR globs: *.ext
+alwaysApply: false
+---
+
+# Rule Title
+
+## Core Principles
+Brief overview
+
+## Specific Guidelines
+- Guideline details with examples
+
+## Things to Avoid
+
+List antipatterns and what not to do
+```
+
+## Organizing Rules by Topic
+
+Recommended categories: Project Overview, Language Standards, Framework Patterns, Integration Patterns (AWS/OpenSearch/APIs), Infrastructure (Terraform/Docker), Security, Development Workflow.
+
+## Updating Rules
+
+Edit `.mdc` files in `.cursor/rules/` directly. Update YAML front matter if scope changes. Split files exceeding 800 tokens.
+
+## Rule Inclusion Behavior
+
+- Rules with `globs` are automatically included when working with matching file types
+- Rules with `description` are included when the topic is relevant to the conversation
+- More specific rules take precedence over general rules when multiple apply

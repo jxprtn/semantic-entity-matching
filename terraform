@@ -1,0 +1,27 @@
+#!/bin/sh
+IMAGE=terraform:1.12
+DOCKERFILE_PATH=terraform.Dockerfile
+
+# If Docker image does not exist
+if [ -z "$(docker images -q $IMAGE 2>/dev/null)" ]; then
+  docker build -t $IMAGE -f $DOCKERFILE_PATH .
+fi
+
+# Get image creation date
+IMAGE_CREATED=$(docker image inspect --format='{{.Created}}' "$IMAGE" | sed 's/\.[0-9]*Z$//')
+DOCKERFILE_MODIFIED=$(stat -f "%m" "$DOCKERFILE_PATH")
+DOCKERFILE_MODIFIED_DATE=$(date -r "$DOCKERFILE_MODIFIED" +"%Y-%m-%dT%H:%M:%S")
+
+# If Dockerfile has been modified since last build
+if [ $(date -j -f "%Y-%m-%dT%H:%M:%S" -u "$IMAGE_CREATED" +%s) -lt $(date -j -f "%Y-%m-%dT%H:%M:%S" "$DOCKERFILE_MODIFIED_DATE" +%s) ]; then
+  docker build -t $IMAGE -f $DOCKERFILE_PATH .
+fi
+
+docker run --rm --init -it \
+  --workdir "$(pwd)" \
+  -v "$(pwd):$(pwd)" \
+  -v ~/.aws:/root/.aws \
+  -e AWS_PROFILE=${AWS_PROFILE:-default} \
+  -e TF_VAR_arch=$(uname -m) \
+  --entrypoint /bin/terraform \
+  $IMAGE -chdir=deployment $@

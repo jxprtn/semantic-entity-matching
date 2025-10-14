@@ -1,0 +1,182 @@
+---
+globs: *.py
+alwaysApply: false
+---
+# Python Standards
+
+## Version
+
+**Python 3.12+** required.
+
+## Project-Specific Conventions
+
+### Keyword-Only Arguments
+
+**Always use `*` for functions with multiple parameters:**
+
+```python
+def main(*, arg1: str, arg2: int, optional: bool = False) -> None:
+    pass
+
+# Usage
+main(arg1="value", arg2=42, optional=True)
+```
+
+### Function Argument Sorting
+
+**Sort arguments alphabetically:**
+
+```python
+def setup(
+    *,
+    assume_role: Optional[str] = None,
+    bedrock_model_id: str,
+    columns: List[str],
+    delete: bool = False,
+    index_name: str,
+    region: str = "us-east-1",
+):
+    pass
+```
+
+### Import Organization
+
+**Always use absolute imports** from the project root:
+
+```python
+# Good
+from lib.opensearch.client import OpenSearchClient
+from lib.bedrock.client import BedrockClient
+from lib.utils import get_aws_credentials
+
+# Avoid relative imports (except within same module)
+from ..opensearch.client import OpenSearchClient  # ❌
+from .bedrock import Bedrock  # ❌
+```
+
+**Group imports in this order:**
+
+```python
+# 1. Standard library
+import asyncio
+import json
+import os
+from pathlib import Path
+from typing import List, Optional
+
+# 2. Third-party packages
+import pandas as pd
+from opensearchpy import OpenSearch
+
+# 3. Local imports
+from lib.bedrock.client import BedrockClient
+from lib.logging import get_logger
+from lib.opensearch.client import OpenSearchClient
+```
+
+**Keep all imports at the top** of the file (no lazy imports unless necessary for circular dependency resolution).
+
+### Function Design
+
+**Naming conventions:**
+- **Module-level helpers**: `_helper_function()` (single underscore)
+- **Class private methods**: `__connect()` (double underscore)
+
+**Key principles:**
+- Single responsibility per function
+- Pass dependencies as parameters (dependency injection)
+- Return explicit `None` for void operations
+
+### Class Organization
+
+**Method order**: `__init__()` → private methods → public methods → properties
+
+**Attribute naming:**
+- Public: `self.attribute`
+- Private: `self.__attribute` (name mangling)
+- Protected: `self._attribute` (convention)
+
+See `lib/opensearch/client.py` for example.
+
+## Async Patterns
+
+### Use aioboto3
+
+**Use `aioboto3` for all AWS operations** (never synchronous boto3):
+
+```python
+import aioboto3
+
+async def get_data():
+    session = aioboto3.Session()
+    async with session.client("bedrock-runtime") as client:
+        response = await client.invoke_model(...)
+```
+
+### Concurrency Control
+
+Use `asyncio.Semaphore` for rate limiting:
+
+```python
+class MyClient:
+    def __init__(self, concurrency=20):
+        self.semaphore = asyncio.Semaphore(concurrency)
+    
+    async def call_api(self):
+        async with self.semaphore:
+            # API call
+            pass
+```
+
+## Error Handling
+
+### CLI Error Messages
+
+**Print user-friendly messages, then exit:**
+
+```python
+try:
+    data = read_data_file(file_path)
+except FileNotFoundError:
+    print(f"Error: File not found: {file_path}")
+    sys.exit(1)
+```
+
+### KeyboardInterrupt
+
+Handled at CLI level in `apps/cli/main.py` - commands don't need to handle Ctrl+C.
+
+## Dependency Injection Pattern
+
+Library functions should accept clients and dependencies as parameters:
+
+```python
+# Good: Client passed as parameter
+def vectorize_columns(
+    *,
+    client: BedrockClient,  # Dependency injected
+    df: pd.DataFrame,       # Data structure, not file path
+    ...
+) -> pd.DataFrame:
+    # Process data
+    return result_df
+
+# Avoid: Creating clients inside library functions
+def vectorize_columns(file_path: str, ...):  # ❌ File path in library
+    client = BedrockClient(...)  # ❌ Client created inside
+    # ...
+```
+
+This pattern enables:
+- **Testability**: Mock clients in tests
+- **Reusability**: Same function works with different clients
+- **Flexibility**: Use in different contexts (CLI, Lambda, web)
+
+## Things to Avoid
+
+- ❌ Don't use synchronous `boto3` (use `aioboto3`)
+- ❌ Don't use relative imports except when importing from the same module
+- ❌ Don't use print() for debugging (use logger)
+- ❌ Don't create functions without keyword-only args for multiple parameters
+- ❌ Don't use wildcard imports (`from module import *`)
+- ❌ Don't create clients inside library functions (inject as parameters)

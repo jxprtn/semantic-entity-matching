@@ -1,0 +1,65 @@
+---
+description: Guidance for running Terraform commands or writing Terraform files
+alwaysApply: false
+---
+
+# Terraform
+
+## Project Structure
+
+```
+deployment/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── terraform.tfvars.example
+└── modules/
+    ├── lambda-ingest/
+    └── opensearch/
+```
+
+## Running Terraform
+
+### Use the Wrapper Script
+
+**Always use `./terraform` from project root:**
+
+```bash
+./terraform init
+./terraform plan
+./terraform apply
+```
+
+The wrapper script ensures Terraform runs in `deployment/` directory.
+
+## Key Outputs for CLI
+
+The Terraform outputs provide values needed for CLI commands:
+
+```hcl
+# Use these outputs with CLI
+output "opensearch_domain_endpoint" {
+  description = "Use for CLI --opensearch-host"
+  value       = module.opensearch.domain_endpoint
+}
+
+output "opensearch_master_role_arn" {
+  description = "Use for CLI --assume-role"
+  value       = module.opensearch.master_role_arn
+}
+```
+
+Example usage:
+
+```bash
+# After terraform apply, get values:
+ENDPOINT=$(terraform output -raw opensearch_domain_endpoint)
+ROLE=$(terraform output -raw opensearch_master_role_arn)
+
+# Use in CLI commands:
+uv run python -m apps.cli.main setup \
+  --opensearch-host $ENDPOINT \
+  --assume-role $ROLE \
+  --index my-index
+```
+
